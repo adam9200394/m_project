@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+  
+  
+    <title>model</title>
+   <!--  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"> -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css" >
+</head>
+<body>
+    <div  class="content visiblity" id="left-content">
+        <h4 class="inline">data</h4>
+        <button id="visualize" class="btn">visualize</button>
+        <div id="data-div"></div>
+        <div id="visualize-div" class="visualize-div"></div>
+    </div>
+    
+    <div id="threeDCanvas" class="closed black">
+
+    </div>
+    <div class="content visiblity" id="right-content">
+        <button class="btn" >
+            colour
+        </button>
+        <button class="btn">
+            click
+        </button>
+        <button class="btn">
+            click
+        </button>
+    </div>
+
+    <div id="main-content">
+       <div class="header">
+           <h3 class="title-text black-text">model simulator</h3>
+       </div>
+       <h3>enter system arttibute you want for the simulation</h3>
+       <br>
+       <h4>mechanical arrtibutes</h4>
+       <div class="section">
+            <div class="sub-section">
+                <div class="label-input">
+                    <p>muscle groups: </p>
+                    <input type="number" id="groups" class="input-text"> 
+                </div>
+                <div class="label-input">
+                    <p>bones: </p>
+                    <input type="number" id="bones" class="input-text"> 
+                </div> 
+                <button class="btn" id="ready-one">ready</button>       
+            </div>
+       </div>
+       
+        <h4>network arrtibutes</h4>
+        <div class="section">
+            <div class="sub-section">   
+                <div class="label-input">
+                    <p>parameter: </p>
+                    <input type="number"  id="par" class="input-text"> 
+                </div>
+                <div class="label-input">
+                    <p>segment: </p>
+                    <input type="number"  id="segments" class="input-text"> 
+                </div>
+                <button class="btn" id="ready-two">ready</button>  
+            </div> 
+        </div>
+
+        <h4>enter actions to be simulated</h4>
+        <button id="new-action-btn" class="btn">new action</button>
+        <div class="section" id="new-action">
+
+        </div>
+        
+        <button id="init-btn" class="btn">initialize system</button>
+    </div>
+
+    <div class="content visiblity" id="bottom-content">
+       
+    </div>
+
+    <div class="content visiblity" id="top-content">
+       <button class="btn" id="play-btn">play</button>
+       <i class="large material-icons indigo lighten-5">play_circle_outline</i>
+    </div>
+
+
+<script src="./index.js"  type="module"></script>
+<script src="./events.js"  type="module"></script>
+
+</body>
+</html>
