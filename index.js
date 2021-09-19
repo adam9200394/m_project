@@ -2,8 +2,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.121.1/build/three.m
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/controls/OrbitControls.js';
 
 class pathGroup {
-    constructor(pathColor){
+    constructor(pathColor = 0xd3c41d, pathAction = 0){
       this.pathColor = pathColor;
+      this.pathAction = pathAction;
       this.pathElement = [];
       this.pathwieght = 0  ;
     }
@@ -32,6 +33,7 @@ const bottomContent = document.getElementById("bottom-content");
 const topContent = document.getElementById("top-content");
 const data_div = document.getElementById("data-div");
 const visualize_div = document.getElementById("visualize-div");
+const actions_div = document.getElementById("actions-div");
 //const btn_color = document.getElementById("btn_color");
 
 //value varibles ==================================================
@@ -47,6 +49,7 @@ let init_ready = false;
 const size = 800;
 const divisions = 50;
 let new_action_err_msg = false;
+
 
 //init data
 export let data = {};
@@ -81,103 +84,170 @@ controls.update();
 
 // ===================================== beging event =========================================
 init_btn.addEventListener("click", ()=> {
-    canvas.classList.add("open");
-    canvas.classList.remove('closed')
-    init_btn.innerText = "";
-    main_content.classList.add("visiblity");
-    setTimeout(() => {
-        canvas.appendChild(renderer.domElement);
-        canvas.classList.remove("black");
-        leftContent.classList.remove("visiblity");
-        rightContent.classList.remove("visiblity");
-        bottomContent.classList.remove("visiblity");
-        topContent.classList.remove("visiblity");
-        document.getElementsByTagName("title")[0].innerText = 'simulator';
-    },700);
-  
-  
+    if(!(data.actions.length > 0)){ 
+        if(main_content.lastChild.id == "m-error-div") {
+            return;
+        } else {
+            let div = document.createElement("div");
+            let text = document.createElement("p");
+            text.innerText = 'no actions to begin simulation please create action';
+            div.classList.add("section");
+            div.id = 'm-error-div';
+            text.classList.add('centered-text');
+            text.classList.add("error-msg");
+            div.appendChild(text);
+            main_content.appendChild(div);
+        }
+      
+    } else {
 
- 
-//get data 
-getData();
-console.log(data);
-let param = data.param;
+        canvas.classList.add("open");
+        canvas.classList.remove('closed')
+        init_btn.innerText = "";
+        main_content.classList.add("visiblity");
+        setTimeout(() => {
+            canvas.appendChild(renderer.domElement);
+            canvas.classList.remove("black");
+            leftContent.classList.remove("visiblity");
+            rightContent.classList.remove("visiblity");
+            bottomContent.classList.remove("visiblity");
+            topContent.classList.remove("visiblity");
+            document.body.removeChild(main_content);
+            document.getElementsByTagName("title")[0].innerText = 'simulator';
+        },700);
 
-// axes helper
-const axesHelper = new THREE.AxesHelper( 1000 );
-scene.add( axesHelper );
+            // create elements 
+        
+            //get data 
+            getData();
+             /* ------ add meshes -------*/
+             //sphers geometry ------------------------------
+            let param = data.param;
+            for(let i= 0; i< param; i++){
+                let x= (Math.random() * window.innerHeight) / -3;
+                let z= Math.random() * 160;
+                let y = (Math.random() * window.innerWidth) / 3 ;
+                let colordata = colors[Math.floor(Math.random() * colors.length)] ;
+                const geometry = new THREE.SphereGeometry( 2, 4, 4 );
+                const material = new THREE.MeshBasicMaterial( { color: colordata } );
+                const sphere = new THREE.Mesh( geometry, material );
+                sphere.position.set(x, y, z);
+                let pointObject = {"obj": sphere, colordata}
+                pointArray.push(pointObject);
+                scene.add( sphere );
+            }
+           
+             // work on data
+            let reslution =parseInt(pointArray.length / data.segments);
+            console.log(reslution);
+            for(let i=0; i<data.actions.length; i++){
+                let action_btn = document.createElement("button");
+                action_btn.classList.add("action");
+                action_btn.id = data.actions[i].action_name;
+                action_btn.innerText = data.actions[i].action_name;
+                actions_div.appendChild(action_btn);
+                let action_point_arry = [];
+               
+                for(let j=0; j< reslution; j++){
+                    let rand = Math.floor(Math.random() * pointArray.length);
+                    let point =  pointArray[rand];
+                    action_point_arry.push(point);
+                }
 
-//grid helper
-const gridHelper = new THREE.GridHelper( size, divisions );
-scene.add( gridHelper );
 
-// scene lighting
-const spotLight = new THREE.SpotLight( 0xffffff );
-spotLight.position.set( 100, 1000, 100 );
+                let g = new pathGroup(undefined, data.actions[i].action_name);
+                for(let j=0; j<action_point_arry.length;j++){
+                    g.pathElement.push(action_point_arry[j]);
+                }
 
-spotLight.castShadow = true;
-spotLight.power = 200;
+                pathGroups.push(g);
+               
+                action_btn.addEventListener("click", () => {
+                    const vertexLine = [];
+                    //console.log(action_point_arry);
+                    for(let k=0; k< action_point_arry.length; k++){
+                        let pointVertex = createVertex(action_point_arry[k].obj.position);
+                        vertexLine.push(pointVertex);  
+                    } 
+                    
+                    let line = draw(vertexLine, colors[Math.floor(Math.random() * colors.length)] );
+                    scene.add(line);
+                    
+                });
+                
+            }
+           // console.log(pathGroups)
+            
 
-spotLight.shadow.mapSize.width = 1024;
-spotLight.shadow.mapSize.height = 1024;
+        //3d scene content ===========================================================================
+        //============================================================================================
+            // axes helper
+            const axesHelper = new THREE.AxesHelper( 1000 );
+            scene.add( axesHelper );
 
-spotLight.shadow.camera.near = 500;
-spotLight.shadow.camera.far = 4000;
-spotLight.shadow.camera.fov = 30;
+            //grid helper
+            const gridHelper = new THREE.GridHelper( size, divisions );
+            scene.add( gridHelper );
 
-scene.add( spotLight );
+            // scene lighting
+            const spotLight = new THREE.SpotLight( 0xffffff );
+            spotLight.position.set( 100, 1000, 100 );
 
-/* ------ add meshes -------*/
-//sphers geometry ------------------------------
-for(let i= 0; i< param; i++){
-    let x= (Math.random() * window.innerHeight) / -3;
-    let z= Math.random() * 160;
-    let y = (Math.random() * window.innerWidth) / 3 ;
-    let colordata = colors[Math.floor(Math.random() * colors.length)] ;
-    const geometry = new THREE.SphereGeometry( 2, 4, 4 );
-    const material = new THREE.MeshBasicMaterial( { color: colordata } );
-    const sphere = new THREE.Mesh( geometry, material );
-    sphere.position.set(x, y, z);
-    let pointObject = {"obj": sphere, colordata}
-    pointArray.push(pointObject);
-   // console.log(sphere.position)
-    scene.add( sphere );
-}
-// connect vertex  -------------------------------
-for (let i=0; i< pathGroups.length; i++){
- for(let j=0; j<pointArray.length; j++) {
-   if(pathGroups[i].pathColor == pointArray[j].colordata){
-       pathGroups[i].pathElement.push(pointArray[j]);
-   }
- }
-}
-//console.log(pathGroups);
+            spotLight.castShadow = true;
+            spotLight.power = 200;
 
-//console.log( pathGroups[0].pathElement[0].obj.position);
-for(let j=0; j< pathGroups.length; j++){
+            spotLight.shadow.mapSize.width = 1024;
+            spotLight.shadow.mapSize.height = 1024;
 
-    const vertexLine = [];
-    for(let i=0; i<pathGroups[j].pathElement.length; i++) {
-        let pointVertex = createVertex(pathGroups[j].pathElement[i].obj.position);
-        vertexLine.push(pointVertex);
-    }
+            spotLight.shadow.camera.near = 500;
+            spotLight.shadow.camera.far = 4000;
+            spotLight.shadow.camera.fov = 30;
 
-    scene.add(draw(vertexLine, pathGroups[j].pathColor))
+            scene.add( spotLight );
+            
+           
+          
+            
+            // connect vertex  -------------------------------
+            for (let i=0; i< pathGroups.length; i++){
+            for(let j=0; j<pointArray.length; j++) {
+            if(pathGroups[i].pathColor == pointArray[j].colordata){
+                pathGroups[i].pathElement.push(pointArray[j]);
+                }
+              }
+            }
+            //console.log(pathGroups);
+
+            //console.log( pathGroups[0].pathElement[0].obj.position);
+            visualize_btn.addEventListener("click", ()=> {
+               
+                    const vertexLine = [];
+                    for(let i=0; i<pathGroups[0].pathElement.length; i++) {
+                        let pointVertex = createVertex(pathGroups[0].pathElement[i].obj.position);
+                        vertexLine.push(pointVertex);
+                    }
+                console.log(vertexLine);
+                //console.log(draw(vertexLine, pathGroups[0].pathColor));
+                // scene.add(draw(vertexLine, pathGroups[0].pathElement[i].obj.position));
+                   
+                    
+                
+            });
+            
+
+
+            bottomContent.innerHTML = `<p class="text"> parameters: ${param}    pathgroups: ${pathGroups.length} </p>`;
+            data_div.innerHTML = `<h4> arttibutes: </h4> <p class="sub-text"> muscle-groups : ${data.groups} </p>  <p class="sub-text">bones : ${data.bones}</p>  <p class="sub-text">segments : ${data.segments}</p>`
+
+
+            renderer.render( scene, camera );
+
+        //end of 3d scene content==========================================================================
+        //=================================================================================================
+
+            }
+
     
-}
-console.log(pathGroups[0].calculatePathWieght());
-console.log(pathGroups[1].calculatePathWieght());
-console.log(pathGroups[2].calculatePathWieght());
-console.log(pathGroups[3].calculatePathWieght());
-/* console.log(pathGroups[0].pathElement[0].obj.position.x) */
-
-bottomContent.innerHTML = `<p class="text"> parameters: ${param}    pathgroups: ${pathGroups.length} </p>`;
-data_div.innerHTML = `<h4> arttibutes: </h4> <p class="sub-text"> muscle-groups : ${data.groups} </p>  <p class="sub-text">bones : ${data.bones}</p>  <p class="sub-text">segments : ${data.segments}</p>`
-
-
-//render and animate
-renderer.render( scene, camera );
-//animate();
 
 
 });
@@ -333,7 +403,7 @@ for(let i=0; i< bones; i++) {
          }
         effector = { bone, value };
         data.effectors.push(effector);
-        console.log(data.effectors);
+        //console.log(data.effectors);
           
        }
        
@@ -378,10 +448,13 @@ new_action_btn.addEventListener("click", ()=> {
         new_action_err_msg = true;
        
     } else {
-        if(section.children[0].id == "error-div"){
-            let error_div = document.getElementById("error-div");
-            section.removeChild(error_div);
+        if(section.children.length > 0){
+            if(section.children[0].id == "error-div"){
+                let error_div = document.getElementById("error-div");
+                section.removeChild(error_div);
+            }
         }
+        
        
         input.type = 'text';
         input.name = 'action-name';
@@ -429,7 +502,7 @@ new_action_btn.addEventListener("click", ()=> {
           div.removeChild(div2);
           data.actions.push(action);
           div.appendChild(saved);
-          console.log(data)
+         // console.log(data)
           //section.removeChild(div);
         });
     
